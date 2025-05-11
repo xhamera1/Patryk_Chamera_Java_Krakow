@@ -1,4 +1,5 @@
-# Patryk_Chamera_Java_Krakow - Optymalizator Płatności Zamówień
+# Patryk_Chamera_Java_Krakow 
+## Optymalizator Płatności Zamówień
 
 ## Autor
 
