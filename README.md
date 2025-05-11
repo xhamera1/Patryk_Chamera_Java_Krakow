@@ -1,173 +1,171 @@
-# Patryk_Chamera_Java_Krakow 
-## Optymalizator Płatności Zamówień
+# Patryk_Chamera_Java_Krakow
+## Order Payment Optimizer
 
-## Autor
+## Author
 
-* **Imię i Nazwisko:** Patryk Chamera
+* **Name:** Patryk Chamera
 * **GitHub:** [xhamera1](https://github.com/xhamera1)
 * **LinkedIn:** [Patryk Chamera](https://www.linkedin.com/in/patryk-chamera-309835289/)
 * **Email:** [chamerapatryk@gmail.com](mailto:chamerapatryk@gmail.com)
-* **Projekt:** Patryk_Chamera_Java_Krakow (Zadanie rekrutacyjne Ocado Technology)
+* **Project:** Patryk_Chamera_Java_Krakow (Ocado Technology Recruitment Task)
 
-## Użyte Technologie i Biblioteki
+## Technologies and Libraries Used
 
-* **Język programowania:** Java 21 
-* **System budowania:** Apache Maven
-* **Testowanie:**
+* **Programming Language:** Java 21
+* **Build System:** Apache Maven
+* **Testing:**
     * JUnit 5 (Jupiter)
-    * Mockito: 
-* **Obsługa JSON:**
+    * Mockito
+* **JSON Handling:**
     * Jackson Databind
-* **Narzędzia deweloperskie:**
+* **Developer Tools:**
     * Lombok
     * IntelliJ IDEA
 
-## Opis Problemu
+## Problem Description
 
-Aplikacja została stworzona w celu rozwiązania problemu optymalizacji metod płatności dla serii zamówień w sklepie internetowym. Głównym celem jest maksymalizacja łącznego rabatu uzyskanego przez klienta, przy jednoczesnym zapewnieniu, że wszystkie zamówienia zostaną w pełni opłacone. Algorytm uwzględnia różne rodzaje promocji:
-* Rabaty procentowe za płatność całego zamówienia określoną kartą płatniczą (promocje specyficzne dla zamówienia).
-* Rabat procentowy za opłacenie co najmniej 10% wartości zamówienia punktami lojalnościowymi (promocja uniwersalna, wykluczająca rabat kartą).
-* Specjalny rabat procentowy za opłacenie całego zamówienia punktami lojalnościowymi.
+The application was created to solve the problem of optimizing payment methods for a series of orders in an online store. The main goal is to maximize the total discount obtained by the customer while ensuring that all orders are fully paid. The algorithm considers various types of promotions:
+* Percentage discounts for paying the entire order with a specific payment card (order-specific promotions).
+* A percentage discount for paying at least 10% of the order value with loyalty points (universal promotion, excluding card discount).
+* A special percentage discount for paying the entire order with loyalty points.
 
-Dodatkowym kryterium jest preferowanie płatności punktami lojalnościowymi, o ile nie zmniejsza to łącznego uzyskanego rabatu, aby minimalizować wydatki z kart płatniczych.
+An additional criterion is to prefer payment with loyalty points, as long as it does not reduce the total discount obtained, to minimize spending from payment cards.
 
-## Podejście do Rozwiązania
+## Approach to the Solution
 
-Zaimplementowane rozwiązanie opiera się na podejściu heurystycznym, które można określić jako algorytm zachłanny:
+The implemented solution is based on a heuristic approach, which can be described as a greedy algorithm:
 
-1.  **Sortowanie Zamówień:** Zamówienia są wstępnie sortowane w kolejności malejącej według maksymalnego teoretycznego rabatu, jaki można dla nich uzyskać. Celem tego kroku jest priorytetyzacja zamówień, które potencjalnie mogą przynieść największe oszczędności.
-2.  **Generowanie Opcji Płatności:** Dla każdego zamówienia (w ustalonej kolejności) generowane są wszystkie możliwe i prawidłowe opcje płatności, biorąc pod uwagę aktualnie dostępne limity środków dla poszczególnych metod płatności oraz zasady promocji.
-3.  **Wybór Najlepszej Opcji:** Spośród wygenerowanych opcji dla danego zamówienia, wybierana jest ta, która lokalnie maksymalizuje korzyść:
-    * Najpierw maksymalizuje uzyskany rabat.
-    * Następnie, w przypadku równego rabatu, maksymalizuje ilość użytych punktów lojalnościowych.
-4.  **Aplikacja Płatności:** Po wyborze najlepszej opcji, odpowiednie kwoty są "pobierane" z limitów metod płatności, a suma wydatków dla każdej metody jest aktualizowana.
+1.  **Order Sorting:** Orders are initially sorted in descending order according to the maximum theoretical discount that can be obtained for them. The purpose of this step is to prioritize orders that can potentially yield the greatest savings.
+2.  **Generating Payment Options:** For each order (in the established order), all possible and valid payment options are generated, considering the currently available fund limits for individual payment methods and promotion rules.
+3.  **Selecting the Best Option:** From the generated options for a given order, the one that locally maximizes the benefit is chosen:
+    * First, it maximizes the obtained discount.
+    * Then, in the case of an equal discount, it maximizes the amount of loyalty points used.
+4.  **Applying Payments:** After selecting the best option, the corresponding amounts are "deducted" from the payment method limits, and the sum of expenses for each method is updated.
 
-Proces ten jest powtarzany dla wszystkich zamówień.
+This process is repeated for all orders.
 
-### Ograniczenia Obecnego Podejścia
+### Limitations of the Current Approach
 
-Zastosowany algorytm zachłanny, ze względu na swoją naturę podejmowania lokalnie optymalnych decyzji (najpierw sortowanie zamówień, a następnie wybór najlepszej opcji dla każdego z nich po kolei), nie gwarantuje znalezienia globalnego optimum dla całego zestawu zamówień. Oznacza to, że suma uzyskanych rabatów może być niższa niż maksymalna możliwa do osiągnięcia. Przykładowo, dla danych testowych dostarczonych w zadaniu, algorytm uzyskuje wynik:
-`PUNKTY 100.00`, `BosBankrut 192.50`, `mZysk 170.00`,
-który jest nieco mniej korzystny niż przykładowy wynik z PDF (`PUNKTY 100.00`, `BosBankrut 190.00`, `mZysk 165.00`).
+The applied greedy algorithm, due to its nature of making locally optimal decisions (first sorting orders, then selecting the best option for each in turn), does not guarantee finding the global optimum for the entire set of orders. This means that the sum of obtained discounts may be lower than the maximum possible. For example, for the test data provided in the task, the algorithm obtains the result:
+`POINTS 100.00`, `BosBankrut 192.50`, `mZysk 170.00`,
+which is slightly less favorable than the example result from the PDF (`POINTS 100.00`, `BosBankrut 190.00`, `mZysk 165.00`).
 
-Aby uzyskać rozwiązanie globalnie optymalne, problem ten mógłby zostać zamodelowany i rozwiązany przy użyciu technik programowania matematycznego, na przykład jako problem programowania liniowego całkowitoliczbowego (MILP - Mixed Integer Linear Programming) i rozwiązany przy pomocy dedykowanego solvera. Takie podejście pozwoliłoby na jednoczesne rozważenie wszystkich zamówień i metod płatności w celu znalezienia gwarantowanego optimum, jednak kosztem potencjalnie większej złożoności implementacji modelu i czasu obliczeń.
+To obtain a globally optimal solution, this problem could be modeled and solved using mathematical programming techniques, for example, as a Mixed Integer Linear Programming (MILP) problem and solved with a dedicated solver. Such an approach would allow for the simultaneous consideration of all orders and payment methods to find a guaranteed optimum, but at the cost of potentially greater complexity in model implementation and computation time.
 
-## Struktura Projektu
+## Project Structure
 
-Główna struktura projektu prezentuje się następująco:
+The main project structure is as follows:
 
 ```
 .
-├── .idea/                  # Pliki konfiguracyjne IntelliJ IDEA
+├── .idea/                     # IntelliJ IDEA configuration files
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/chamera/patryk/
-│   │   │       ├── config/         # Walidacja danych wejściowych (InputValidator.java)
-│   │   │       ├── exception/      # Niestandardowe klasy wyjątków
-│   │   │       ├── model/          # Klasy POJO reprezentujące dane (Order.java, PaymentMethod.java)
-│   │   │       ├── parser/         # Parsowanie plików JSON (JsonDataParser.java)
-│   │   │       └── service/        # Główna logika biznesowa (PaymentOptimizerService.java)
-│   │   │       ├── ApplicationRunner.java # Koordynator przepływu aplikacji
-│   │   │       └── Main.java              # Główny punkt wejścia aplikacji
-│   │   └── resources/          # Przykładowe pliki JSON (orders.json, paymentmethods.json)
+│   │   │       ├── config/            # Input data validation (InputValidator.java)
+│   │   │       ├── exception/         # Custom exception classes
+│   │   │       ├── model/             # POJO classes representing data (Order.java, PaymentMethod.java)
+│   │   │       ├── parser/            # Parsing JSON files (JsonDataParser.java)
+│   │   │       └── service/           # Main business logic (PaymentOptimizerService.java)
+│   │   │       ├── ApplicationRunner.java # Application flow coordinator
+│   │   │       └── Main.java              # Main application entry point
+│   │   └── resources/             # Sample JSON files (orders.json, paymentmethods.json)
 │   └── test/
 │       ├── java/
 │       │   └── com/chamera/patryk/
-│       │       ├── config/         # Testy dla InputValidator
-│       │       ├── parser/         # Testy dla JsonDataParser
-│       │       └── service/        # Testy dla PaymentOptimizerService
-│       │       └── ApplicationRunnerTest.java # Testy dla ApplicationRunner (integracyjne)
+│       │       ├── config/            # Tests for InputValidator
+│       │       ├── parser/            # Tests for JsonDataParser
+│       │       └── service/           # Tests for PaymentOptimizerService
+│       │       └── ApplicationRunnerTest.java # Tests for ApplicationRunner (integration)
 │       └── resources/
-│           ├── orders/           # Pliki JSON używane w testach parsera zamówień
-│           └── paymentmethods/   # Pliki JSON używane w testach parsera metod płatności
-├── target/                   # Katalog generowany przez Maven
-│                               # Zawiera skompilowane klasy, raporty, zbudowany JAR itp.
-├── app.jar                   # Zbudowany, wykonywalny plik aplikacji (fat-jar)
-├── pom.xml                   # Plik konfiguracyjny Mavena 
-└── README.md                 # Ten plik
+│           ├── orders/            # JSON files used in tests for order parser
+│           └── paymentmethods/    # JSON files used in tests for payment method parser
+├── target/                    # Directory generated by Maven
+│                                # Contains compiled classes, reports, built JAR, etc.
+├── app.jar                    # Built, executable application file (fat-jar)
+├── pom.xml                    # Maven configuration file
+└── README.md                  # This file
 ```
 
+## Running the Application
 
-## Uruchomienie Aplikacji
+### Requirements
 
-### Wymagania
+* Java Development Kit (JDK) version 21.
+* Apache Maven (for building the project from source yourself).
 
-* Java Development Kit (JDK) w wersji 21.
-* Apache Maven (do samodzielnej budowy projektu ze źródeł).
+### Provided JAR File
 
-### Dostarczony Plik JAR
+The main project directory contains a ready-to-run `app.jar` file. It was built using Maven and includes all necessary dependencies (a "fat-jar").
 
-W głównym katalogu projektu znajduje się gotowy do uruchomienia plik `app.jar`. Został on zbudowany przy użyciu Mavena i zawiera wszystkie niezbędne zależności (tzw. "fat-jar").
-
-Jeśli chcesz samodzielnie zbudować projekt ze źródeł:
-1.  **Sklonuj repozytorium:**
+If you want to build the project from source yourself:
+1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/xhamera1/Patryk_Chamera_Java_Krakow.git
+    git clone [https://github.com/xhamera1/Patryk_Chamera_Java_Krakow.git](https://github.com/xhamera1/Patryk_Chamera_Java_Krakow.git)
     cd Patryk_Chamera_Java_Krakow
     ```
-    Lub rozpakuj dostarczone archiwum z kodem źródłowym i przejdź do głównego katalogu projektu.
+    Or unpack the provided source code archive and navigate to the main project directory.
 
-2.  **Zbuduj projekt:**
-    W głównym katalogu projektu uruchom komendę Mavena:
+2.  **Build the project:**
+    In the main project directory, run the Maven command:
     ```bash
     mvn clean package
     ```
-    Spowoduje to utworzenie pliku `app.jar` w katalogu `target/`.
+    This will create the `app.jar` file in the `target/` directory.
 
-### Uruchomienie
+### Execution
 
-Aplikację uruchamia się z wiersza poleceń, podając ścieżki do plików JSON z zamówieniami i metodami płatności.
+The application is launched from the command line, providing paths to the JSON files with orders and payment methods.
 
-**A. Uruchomienie dostarczonego `app.jar` (z głównego katalogu projektu):**
+**A. Running the provided `app.jar` (from the main project directory):**
 
-Zakładając, że znajdujesz się w głównym katalogu projektu (`Patryk_Chamera_Java_Krakow`), gdzie umieszczony jest `app.jar`:
+Assuming you are in the main project directory (`Patryk_Chamera_Java_Krakow`), where `app.jar` is located:
 
-* **Użycie przykładowych plików JSON (dostarczonych w projekcie):**
+* **Using sample JSON files (provided in the project):**
     ```bash
     java -jar app.jar src/main/resources/orders.json src/main/resources/paymentmethods.json
     ```
-* **Użycie własnych plików JSON:**
+* **Using your own JSON files:**
     ```bash
-    java -jar app.jar /sciezka/do/twojego/orders.json /sciezka/do/twojego/paymentmethods.json
+    java -jar app.jar /path/to/your/orders.json /path/to/your/paymentmethods.json
     ```
 
-**B. Uruchomienie `app.jar` bezpośrednio z katalogu `target/` (po samodzielnej budowie):**
+**B. Running `app.jar` directly from the `target/` directory (after building it yourself):**
 
-Jeśli samodzielnie zbudowałeś projekt i chcesz uruchomić plik JAR bezpośrednio z katalogu `target/` (bez jego kopiowania), pamiętaj, że ścieżki do plików zasobów (np. `src/main/resources/...`) muszą być odpowiednio dostosowane lub musisz użyć ścieżek bezwzględnych.
+If you built the project yourself and want to run the JAR file directly from the `target/` directory (without copying it), remember that paths to resource files (e.g., `src/main/resources/...`) must be adjusted accordingly, or you must use absolute paths.
 
-* **Przykład z plikami zasobów (zakładając, że jesteś w głównym katalogu projektu):**
+* **Example with resource files (assuming you are in the main project directory):**
     ```bash
     java -jar target/app.jar src/main/resources/orders.json src/main/resources/paymentmethods.json
     ```
 
-* **Przykład z własnymi plikami (ścieżki bezwzględne):**
+* **Example with your own files (absolute paths):**
     ```bash
-    java -jar target/app.jar /pelna/sciezka/do/orders.json /pelna/sciezka/do/paymentmethods.json
+    java -jar target/app.jar /full/path/to/orders.json /full/path/to/paymentmethods.json
     ```
 
-**Zalecane jest uruchamianie dostarczonego `app.jar` z głównego katalogu projektu.**
+**It is recommended to run the provided `app.jar` from the main project directory.**
 
-## Przykładowy wynik dla danych testowych z PDF (uzyskany przez ten algorytm):
+## Example output for test data from PDF (obtained by this algorithm):
 ```
-PUNKTY 100.00
+POINTS 100.00
 BosBankrut 192.50
 mZysk 170.00
 ```
 
-## Testy
+## Tests
 
-Projekt zawiera zestaw testów jednostkowych oraz integracyjnych mających na celu weryfikację poprawności działania poszczególnych komponentów:
+The project includes a set of unit and integration tests aimed at verifying the correct operation of individual components:
 
-* **`InputValidatorTest.java`:** Sprawdza walidację argumentów i ścieżek plików.
-* **`JsonDataParserTest.java`:** Weryfikuje parsowanie danych z plików JSON.
-* **`PaymentOptimizerServiceTest.java`:** Pokrywa logikę obliczania rabatów, generowania opcji płatności i wyboru najlepszej opcji, w tym dla głównej metody `optimizePayments`.
-* **`ApplicationRunnerTest.java`:** Testuje ogólny przepływ aplikacji, weryfikując interakcje między komponentami (np. walidatorem, parserem, serwisem optymalizującym) oraz obsługę różnych scenariuszy wejściowych i błędów na poziomie aplikacji. Te testy mają charakter bardziej integracyjny.
+* **`InputValidatorTest.java`:** Checks validation of arguments and file paths.
+* **`JsonDataParserTest.java`:** Verifies parsing of data from JSON files.
+* **`PaymentOptimizerServiceTest.java`:** Covers the logic for calculating discounts, generating payment options, and selecting the best option, including for the main `optimizePayments` method.
+* **`ApplicationRunnerTest.java`:** Tests the overall application flow, verifying interactions between components (e.g., validator, parser, optimizing service) and handling various input scenarios and application-level errors. These tests are more integration-oriented.
 
-## Dokumentacja Kodu
+## Code Documentation
 
-Kod źródłowy, w szczególności kluczowe klasy i metody, został opatrzony komentarzami dokumentacyjnymi Javadoc.
+The source code, especially key classes and methods, has been provided with Javadoc documentation comments.
 
-
-## Licencja
-Ten projekt jest udostępniany na licencji MIT [LICENSE](LICENSE)
+## License
+This project is licensed under the MIT License [LICENSE](LICENSE)
