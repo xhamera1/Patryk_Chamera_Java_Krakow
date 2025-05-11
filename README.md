@@ -107,7 +107,7 @@ If you want to build the project from source yourself:
 1. **Clone the repository:**
 
    ```bash
-   git clone [https://github.com/xhamera1/Patryk_Chamera_Java_Krakow.git](https://github.com/xhamera1/Patryk_Chamera_Java_Krakow.git)
+   git clone https://github.com/xhamera1/Patryk_Chamera_Java_Krakow.git
    cd Patryk_Chamera_Java_Krakow
    ```
 
