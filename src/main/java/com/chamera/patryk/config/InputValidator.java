@@ -8,10 +8,28 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Utility class for validating application startup arguments and input file paths.
+ * This class provides static methods to ensure that the command-line arguments
+ * meet the expected criteria (e.g., correct number of arguments) and that
+ * the specified file paths are valid, existent, readable, and of the correct type.
+ */
 public class InputValidator {
 
+    /**
+     * The expected number of command-line arguments for the application.
+     */
     public final static int EXPECTED_ARGS_COUNT = 2;
 
+
+    /**
+     * Validates command-line arguments.
+     * Checks for the correct number of arguments and validates each file path.
+     *
+     * @param args Command-line arguments (orders file path, payment methods file path).
+     * @throws ArgsValidationException If argument count is incorrect.
+     * @throws FileValidationException If file paths are invalid or files are inaccessible.
+     */
     public static void validateArgs(String[] args) throws ArgsValidationException, FileValidationException {
         if (args == null || args.length != EXPECTED_ARGS_COUNT) {
             throw new ArgsValidationException("Invalid number of arguments. Expected " + EXPECTED_ARGS_COUNT +
@@ -24,6 +42,15 @@ public class InputValidator {
         validateSingleFile(paymentMethodsFilePath, "Payment methods");
     }
 
+
+    /**
+     * Validates a single file path.
+     * Checks for existence, type (regular file), readability, and .json extension.
+     *
+     * @param filePath Path to the file.
+     * @param description File description for error messages (e.g., "Orders").
+     * @throws FileValidationException If validation fails.
+     */
     private static void validateSingleFile(String filePath, String description) throws FileValidationException {
         if (filePath == null || filePath.trim().isEmpty()) {
             throw new FileValidationException(description + " file path cannot be null or empty.");

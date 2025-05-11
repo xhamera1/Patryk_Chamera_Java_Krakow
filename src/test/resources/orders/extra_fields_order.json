@@ -1,0 +1,9 @@
+[
+  {
+    "id": "ORDER_EXTRA",
+    "value": "50.00",
+    "promotions": ["PROMO_X"],
+    "customerName": "John Doe",
+    "deliveryAddress": "123 Main St"
+  }
+]

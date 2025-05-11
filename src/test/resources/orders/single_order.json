@@ -1,0 +1,7 @@
+[
+  {
+    "id": "SINGLE_ORDER",
+    "value": "99.99",
+    "promotions": ["SINGLE_PROMO"]
+  }
+]

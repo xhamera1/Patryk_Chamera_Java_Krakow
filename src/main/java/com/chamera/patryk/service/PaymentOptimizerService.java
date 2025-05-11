@@ -9,20 +9,38 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+/**
+ * Service responsible for optimizing payment methods for a list of orders.
+ * The main goal is to maximize the total discount obtained by strategically selecting
+ * payment methods for each order, while ensuring all orders are fully paid.
+ * It prioritizes using loyalty points if doing so does not reduce the overall discount.
+ */
 public class PaymentOptimizerService {
 
     private static final String POINTS_ID_STRING = "PUNKTY";
     private static final BigDecimal PARTIAL_POINTS_ORDER_DISCOUNT_PERCENTAGE = new BigDecimal("0.10");
     private static final BigDecimal MIN_POINTS_PERCENTAGE_FOR_PARTIAL_DISCOUNT = new BigDecimal("0.10");
 
+
+    /**
+     * Represents a potential payment option for a single order.
+     * It stores the calculated discount, amount of points used, and the breakdown
+     * of amounts to be charged to various payment methods.
+     */
     @Getter
     @ToString
-    private static class PaymentOption {
+    protected static class PaymentOption {
 
         BigDecimal calculatedDiscountAmount;
         BigDecimal pointsUsedAmount;
         Map<String, BigDecimal> amountsToChargeByMethod;
 
+        /**
+         * Constructs a PaymentOption.
+         * @param calculatedDiscountAmount The discount achieved.
+         * @param pointsUsedAmount         The amount of points used.
+         * @param amountsToChargeByMethod  Map of payment method IDs to amounts charged.
+         */
         public PaymentOption(BigDecimal calculatedDiscountAmount, BigDecimal pointsUsedAmount, Map<String, BigDecimal> amountsToChargeByMethod) {
             this.calculatedDiscountAmount = calculatedDiscountAmount;
             this.pointsUsedAmount = pointsUsedAmount;
@@ -30,6 +48,18 @@ public class PaymentOptimizerService {
         }
     }
 
+
+    /**
+     * Main method to find the optimal payment distribution for a list of orders.
+     * It sorts orders by their highest theoretical discount to tackle high-value discounts first.
+     * For each order, it explores different payment scenarios (full card, full points, partial points, etc.),
+     * choosing the one that offers the best discount, or uses more points if discounts are equal.
+     *
+     * @param orders List of orders to process.
+     * @param paymentMethods Available payment methods.
+     * @return Map of payment method ID to total amount spent with that method.
+     * @throws RuntimeException If an order cannot be fully paid.
+     */
     public Map<String, BigDecimal> optimizePayments(List<Order> orders, List<PaymentMethod> paymentMethods) {
         Map<String, PaymentMethod> paymentMethodMap = new HashMap<>();
         Map<String, BigDecimal> remainingLimits = new HashMap<>();
@@ -78,7 +108,18 @@ public class PaymentOptimizerService {
     }
 
 
-    private BigDecimal calculateMaxTheoreticalDiscount(Order order, Map<String, PaymentMethod> paymentMethodMap) {
+    /**
+     * Estimates the maximum discount an order could achieve in isolation.
+     * Used as a heuristic for sorting orders. Considers:
+     * 1. Full payment by points with points-specific discount.
+     * 2. Full payment by an eligible promotional card.
+     * 3. Partial payment by points (min 10% of value) for a 10% order discount.
+     *
+     * @param order The order to evaluate.
+     * @param paymentMethodMap Available payment methods.
+     * @return The highest theoretical discount for this order.
+     */
+    protected BigDecimal calculateMaxTheoreticalDiscount(Order order, Map<String,PaymentMethod> paymentMethodMap) {
         BigDecimal orderValue = order.getValue();
         BigDecimal maxTheoreticalDiscount = BigDecimal.ZERO;
 
@@ -132,8 +173,16 @@ public class PaymentOptimizerService {
 
 
 
-
-    private void addFullCardPaymentOptions(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits, List<PaymentOption> possibleOptions) {
+    /**
+     * Adds options for paying fully with a promotional card.
+     * Iterates through order's promotions, if a card has enough limit after its discount, an option is added.
+     *
+     * @param order Current order.
+     * @param paymentMethodMap All payment methods.
+     * @param remainingLimits Current limits of methods.
+     * @param possibleOptions List to add valid options.
+     */
+    protected void addFullCardPaymentOptions(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits, List<PaymentOption> possibleOptions) {
         BigDecimal orderValue = order.getValue();
 
         if (order.getPromotions() == null || order.getPromotions().isEmpty()) {
@@ -161,7 +210,16 @@ public class PaymentOptimizerService {
     }
 
 
-    private void addFullPointsOptions(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits,List<PaymentOption> possibleOptions) {
+    /**
+     * Adds an option for paying fully with loyalty points ("PUNKTY").
+     * Considers the discount associated with the PUNKTY method itself.
+     *
+     * @param order Current order.
+     * @param paymentMethodMap All payment methods.
+     * @param remainingLimits Current limits of methods.
+     * @param possibleOptions List to add valid options.
+     */
+    protected void addFullPointsOptions(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits,List<PaymentOption> possibleOptions) {
         BigDecimal orderValue = order.getValue();
         PaymentMethod method = paymentMethodMap.get(POINTS_ID_STRING);
 
@@ -181,7 +239,18 @@ public class PaymentOptimizerService {
         }
     }
 
-    private void addPartialPointsOption(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits,List<PaymentOption> possibleOptions) {
+
+    /**
+     * Adds option for partial points payment (min 10% of order value for 10% total discount),
+     * with remainder paid by a selected card. Card selection prioritizes non-promotional cards
+     * by lowest sufficient limit, then promotional cards by lowest discount/limit.
+     *
+     * @param order Current order.
+     * @param paymentMethodMap All payment methods.
+     * @param remainingLimits Current limits of methods.
+     * @param possibleOptions List to add valid options.
+     */
+    protected void addPartialPointsOption(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits,List<PaymentOption> possibleOptions) {
         BigDecimal orderValue = order.getValue();
         PaymentMethod pointsMethod = paymentMethodMap.get(POINTS_ID_STRING);
 
@@ -196,7 +265,7 @@ public class PaymentOptimizerService {
             return;
         }
 
-        BigDecimal orderDiscountAmount = orderValue.multiply(PARTIAL_POINTS_ORDER_DISCOUNT_PERCENTAGE);
+        BigDecimal orderDiscountAmount = orderValue.multiply(PARTIAL_POINTS_ORDER_DISCOUNT_PERCENTAGE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal orderValueAfter10PercentageDiscount = orderValue.subtract(orderDiscountAmount);
 
         BigDecimal actualPointsToSpend;
@@ -265,7 +334,17 @@ public class PaymentOptimizerService {
         }
     }
 
-    private void addCardPaymentWithoutPromotionOption(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits,List<PaymentOption> possibleOptions) {
+
+    /**
+     * Adds options for paying fully with any card, without applying its specific promotion.
+     * This is a fallback if other discounted options are unavailable.
+     *
+     * @param order Current order.
+     * @param paymentMethodMap All payment methods.
+     * @param remainingLimits Current limits of methods.
+     * @param possibleOptions List to add valid options.
+     */
+    protected void addCardPaymentWithoutPromotionOption(Order order, Map<String, PaymentMethod> paymentMethodMap, Map<String, BigDecimal> remainingLimits,List<PaymentOption> possibleOptions) {
         BigDecimal orderValue = order.getValue();
 
         for (PaymentMethod card : paymentMethodMap.values()) {
@@ -284,14 +363,22 @@ public class PaymentOptimizerService {
 
 
 
-    private void applyPaymentOption(PaymentOption bestOption, Map<String, BigDecimal> remainingLimits, Map<String, BigDecimal> totalSpentByMethod) {
+    /**
+     * Applies the chosen payment option by updating limits and total spent amounts.
+     *
+     * @param bestOption The payment option to apply.
+     * @param remainingLimits Map of method limits to be updated.
+     * @param totalSpentByMethod Map of total spent per method to be updated.
+     * @throws IllegalStateException If a method's limit is found to be insufficient during application (logic error).
+     */
+    protected void applyPaymentOption(PaymentOption bestOption, Map<String, BigDecimal> remainingLimits, Map<String, BigDecimal> totalSpentByMethod) {
         for (Map.Entry<String, BigDecimal> entry : bestOption.getAmountsToChargeByMethod().entrySet()) {
             String methodId = entry.getKey();
             BigDecimal amountToChargeByMethod = entry.getValue();
 
             BigDecimal currentLimit = remainingLimits.get(methodId);
             if (currentLimit == null || currentLimit.compareTo(amountToChargeByMethod) < 0) {
-                throw new IllegalStateException("Error while aplying payment limit");
+                throw new IllegalStateException("Error while applying payment limit");
             }
 
             remainingLimits.put(methodId, currentLimit.subtract(amountToChargeByMethod));
@@ -299,7 +386,6 @@ public class PaymentOptimizerService {
             totalSpentByMethod.put(methodId, totalSpentByMethod.getOrDefault(methodId, BigDecimal.ZERO).add(amountToChargeByMethod));
         }
     }
-
 
 
 
